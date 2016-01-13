@@ -7,7 +7,7 @@ import (
 	"github.com/favclip/genbase"
 )
 
-// BuildStruct represents source code of assembling..
+// BuildSource represents source code of assembling..
 type BuildSource struct {
 	g         *genbase.Generator
 	pkg       *genbase.PackageInfo
@@ -44,6 +44,7 @@ type BuildTag struct {
 	NoIndex           bool // e.g. no index `datastore:",noindex"`
 }
 
+// Parse construct *BuildSource from package & type information.
 func Parse(pkg *genbase.PackageInfo, typeInfos genbase.TypeInfos) (*BuildSource, error) {
 	bu := &BuildSource{
 		g:         genbase.NewGenerator(pkg),
@@ -164,6 +165,7 @@ func (b *BuildSource) parseField(st *BuildStruct, typeInfo *genbase.TypeInfo, fi
 	return nil
 }
 
+// Emit generate wrapper code.
 func (b *BuildSource) Emit(args *[]string) ([]byte, error) {
 	b.g.PrintHeader("qbg", args)
 
@@ -178,7 +180,7 @@ func (b *BuildSource) Emit(args *[]string) ([]byte, error) {
 }
 
 func (st *BuildStruct) emit(g *genbase.Generator) error {
-	g.Printf("// for %s\n", st.Name())
+	g.Printf("// %[1]sQueryBuilder build query for %[1]s.\n", st.Name())
 
 	// generate FooQueryBuilder struct from Foo struct
 	g.Printf("type %sQueryBuilder struct {\n", st.Name())
@@ -196,6 +198,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 
 	// generate property info
 	g.Printf(`
+			// %[1]sQueryProperty has property information for %[1]sQueryBuilder.
 			type %[1]sQueryProperty struct {
 				bldr *%[1]sQueryBuilder
 				name string
@@ -204,6 +207,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 			`, st.Name())
 
 	// generate new query builder factory function
+	g.Printf("// New%[1]sQueryBuilder create new %[1]sQueryBuilder.\n", st.Name())
 	g.Printf("func New%[1]sQueryBuilder() *%[1]sQueryBuilder {\n", st.Name())
 	g.Printf("q := datastore.NewQuery(\"%s\")\n", st.Name())
 	g.Printf("bldr := &%[1]sQueryBuilder{q:q}\n", st.Name())
@@ -232,6 +236,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 
 	// generate methods
 	g.Printf(`
+			// Ancestor sets parent key to ancestor query.
 			func (bldr *%[1]sQueryBuilder) Ancestor(parentKey *datastore.Key) *%[1]sQueryBuilder {
 				bldr.q = bldr.q.Ancestor(parentKey)
 				if bldr.plugin != nil {
@@ -240,6 +245,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return bldr
 			}
 
+			// KeysOnly sets keys only option to query.
 			func (bldr *%[1]sQueryBuilder) KeysOnly() *%[1]sQueryBuilder {
 				bldr.q = bldr.q.KeysOnly()
 				if bldr.plugin != nil {
@@ -248,6 +254,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return bldr
 			}
 
+			// Start setup to query.
 			func (bldr *%[1]sQueryBuilder) Start(cur datastore.Cursor) *%[1]sQueryBuilder {
 				bldr.q = bldr.q.Start(cur)
 				if bldr.plugin != nil {
@@ -256,7 +263,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return bldr
 			}
 
-
+			// Offset setupto query.
 			func (bldr *%[1]sQueryBuilder) Offset(offset int) *%[1]sQueryBuilder {
 				bldr.q = bldr.q.Offset(offset)
 				if bldr.plugin != nil {
@@ -265,6 +272,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return bldr
 			}
 
+			// Limit setup to query.
 			func (bldr *%[1]sQueryBuilder) Limit(limit int) *%[1]sQueryBuilder {
 				bldr.q = bldr.q.Limit(limit)
 				if bldr.plugin != nil {
@@ -273,10 +281,12 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return bldr
 			}
 
+			// Query returns *datastore.Query.
 			func (bldr *%[1]sQueryBuilder) Query() *datastore.Query {
 				return bldr.q
 			}
 
+			// Filter with op & value.
 			func (p *%[1]sQueryProperty) Filter(op string, value interface{}) *%[1]sQueryBuilder {
 				switch op {
 					case "<=":
@@ -298,6 +308,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return p.bldr
 			}
 
+			// LessThanOrEqual filter with value.
 			func (p *%[1]sQueryProperty) LessThanOrEqual(value interface{}) *%[1]sQueryBuilder {
 				p.bldr.q = p.bldr.q.Filter(p.name + " <=", value)
 				if p.bldr.plugin != nil {
@@ -306,6 +317,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return p.bldr
 			}
 
+			// GreaterThanOrEqual filter with value.
 			func (p *%[1]sQueryProperty) GreaterThanOrEqual(value interface{}) *%[1]sQueryBuilder {
 				p.bldr.q = p.bldr.q.Filter(p.name +  " >=", value)
 				if p.bldr.plugin != nil {
@@ -314,6 +326,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return p.bldr
 			}
 
+			// LessThan filter with value.
 			func (p *%[1]sQueryProperty) LessThan(value interface{}) *%[1]sQueryBuilder {
 				p.bldr.q = p.bldr.q.Filter(p.name + " <", value)
 				if p.bldr.plugin != nil {
@@ -322,6 +335,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return p.bldr
 			}
 
+			// GreaterThan filter with value.
 			func (p *%[1]sQueryProperty) GreaterThan(value interface{}) *%[1]sQueryBuilder {
 				p.bldr.q = p.bldr.q.Filter(p.name + " >", value)
 				if p.bldr.plugin != nil {
@@ -330,6 +344,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return p.bldr
 			}
 
+			// Equal filter with value.
 			func (p *%[1]sQueryProperty) Equal(value interface{}) *%[1]sQueryBuilder {
 				p.bldr.q = p.bldr.q.Filter(p.name + " =", value)
 				if p.bldr.plugin != nil {
@@ -338,6 +353,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return p.bldr
 			}
 
+			// Asc order.
 			func (p *%[1]sQueryProperty) Asc() *%[1]sQueryBuilder {
 				p.bldr.q = p.bldr.q.Order(p.name)
 				if p.bldr.plugin != nil {
@@ -345,6 +361,8 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				}
 				return p.bldr
 			}
+
+			// Desc order.
 			func (p *%[1]sQueryProperty) Desc() *%[1]sQueryBuilder {
 				p.bldr.q = p.bldr.q.Order("-" + p.name)
 				if p.bldr.plugin != nil {
@@ -359,6 +377,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 	return nil
 }
 
+// Name returns struct type name.
 func (st *BuildStruct) Name() string {
 	return st.typeInfo.Name()
 }
