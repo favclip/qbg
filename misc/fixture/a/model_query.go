@@ -7,18 +7,20 @@ import (
 	"google.golang.org/appengine/datastore"
 )
 
-// for Sample
+// SampleQueryBuilder build query for Sample.
 type SampleQueryBuilder struct {
 	q      *datastore.Query
 	plugin qbgutils.Plugin
 	Foo    *SampleQueryProperty
 }
 
+// SampleQueryProperty has property information for SampleQueryBuilder.
 type SampleQueryProperty struct {
 	bldr *SampleQueryBuilder
 	name string
 }
 
+// NewSampleQueryBuilder create new SampleQueryBuilder.
 func NewSampleQueryBuilder() *SampleQueryBuilder {
 	q := datastore.NewQuery("Sample")
 	bldr := &SampleQueryBuilder{q: q}
@@ -34,6 +36,7 @@ func NewSampleQueryBuilder() *SampleQueryBuilder {
 	return bldr
 }
 
+// Ancestor sets parent key to ancestor query.
 func (bldr *SampleQueryBuilder) Ancestor(parentKey *datastore.Key) *SampleQueryBuilder {
 	bldr.q = bldr.q.Ancestor(parentKey)
 	if bldr.plugin != nil {
@@ -42,6 +45,7 @@ func (bldr *SampleQueryBuilder) Ancestor(parentKey *datastore.Key) *SampleQueryB
 	return bldr
 }
 
+// KeysOnly sets keys only option to query.
 func (bldr *SampleQueryBuilder) KeysOnly() *SampleQueryBuilder {
 	bldr.q = bldr.q.KeysOnly()
 	if bldr.plugin != nil {
@@ -50,6 +54,7 @@ func (bldr *SampleQueryBuilder) KeysOnly() *SampleQueryBuilder {
 	return bldr
 }
 
+// Start setup to query.
 func (bldr *SampleQueryBuilder) Start(cur datastore.Cursor) *SampleQueryBuilder {
 	bldr.q = bldr.q.Start(cur)
 	if bldr.plugin != nil {
@@ -58,6 +63,7 @@ func (bldr *SampleQueryBuilder) Start(cur datastore.Cursor) *SampleQueryBuilder 
 	return bldr
 }
 
+// Offset setupto query.
 func (bldr *SampleQueryBuilder) Offset(offset int) *SampleQueryBuilder {
 	bldr.q = bldr.q.Offset(offset)
 	if bldr.plugin != nil {
@@ -66,6 +72,7 @@ func (bldr *SampleQueryBuilder) Offset(offset int) *SampleQueryBuilder {
 	return bldr
 }
 
+// Limit setup to query.
 func (bldr *SampleQueryBuilder) Limit(limit int) *SampleQueryBuilder {
 	bldr.q = bldr.q.Limit(limit)
 	if bldr.plugin != nil {
@@ -74,10 +81,12 @@ func (bldr *SampleQueryBuilder) Limit(limit int) *SampleQueryBuilder {
 	return bldr
 }
 
+// Query returns *datastore.Query.
 func (bldr *SampleQueryBuilder) Query() *datastore.Query {
 	return bldr.q
 }
 
+// Filter with op & value.
 func (p *SampleQueryProperty) Filter(op string, value interface{}) *SampleQueryBuilder {
 	switch op {
 	case "<=":
@@ -99,6 +108,7 @@ func (p *SampleQueryProperty) Filter(op string, value interface{}) *SampleQueryB
 	return p.bldr
 }
 
+// LessThanOrEqual filter with value.
 func (p *SampleQueryProperty) LessThanOrEqual(value interface{}) *SampleQueryBuilder {
 	p.bldr.q = p.bldr.q.Filter(p.name+" <=", value)
 	if p.bldr.plugin != nil {
@@ -107,6 +117,7 @@ func (p *SampleQueryProperty) LessThanOrEqual(value interface{}) *SampleQueryBui
 	return p.bldr
 }
 
+// GreaterThanOrEqual filter with value.
 func (p *SampleQueryProperty) GreaterThanOrEqual(value interface{}) *SampleQueryBuilder {
 	p.bldr.q = p.bldr.q.Filter(p.name+" >=", value)
 	if p.bldr.plugin != nil {
@@ -115,6 +126,7 @@ func (p *SampleQueryProperty) GreaterThanOrEqual(value interface{}) *SampleQuery
 	return p.bldr
 }
 
+// LessThan filter with value.
 func (p *SampleQueryProperty) LessThan(value interface{}) *SampleQueryBuilder {
 	p.bldr.q = p.bldr.q.Filter(p.name+" <", value)
 	if p.bldr.plugin != nil {
@@ -123,6 +135,7 @@ func (p *SampleQueryProperty) LessThan(value interface{}) *SampleQueryBuilder {
 	return p.bldr
 }
 
+// GreaterThan filter with value.
 func (p *SampleQueryProperty) GreaterThan(value interface{}) *SampleQueryBuilder {
 	p.bldr.q = p.bldr.q.Filter(p.name+" >", value)
 	if p.bldr.plugin != nil {
@@ -131,6 +144,7 @@ func (p *SampleQueryProperty) GreaterThan(value interface{}) *SampleQueryBuilder
 	return p.bldr
 }
 
+// Equal filter with value.
 func (p *SampleQueryProperty) Equal(value interface{}) *SampleQueryBuilder {
 	p.bldr.q = p.bldr.q.Filter(p.name+" =", value)
 	if p.bldr.plugin != nil {
@@ -139,6 +153,7 @@ func (p *SampleQueryProperty) Equal(value interface{}) *SampleQueryBuilder {
 	return p.bldr
 }
 
+// Asc order.
 func (p *SampleQueryProperty) Asc() *SampleQueryBuilder {
 	p.bldr.q = p.bldr.q.Order(p.name)
 	if p.bldr.plugin != nil {
@@ -146,6 +161,8 @@ func (p *SampleQueryProperty) Asc() *SampleQueryBuilder {
 	}
 	return p.bldr
 }
+
+// Desc order.
 func (p *SampleQueryProperty) Desc() *SampleQueryBuilder {
 	p.bldr.q = p.bldr.q.Order("-" + p.name)
 	if p.bldr.plugin != nil {

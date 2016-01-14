@@ -2,6 +2,7 @@ package qbgutils
 
 import "google.golang.org/appengine/datastore"
 
+// Plugin supply hook point for query constructions.
 type Plugin interface {
 	Init(typeName string)
 	Ancestor(ancestor *datastore.Key)
@@ -14,6 +15,7 @@ type Plugin interface {
 	Desc(name string)
 }
 
+// Plugger supply Plugin component.
 type Plugger interface {
 	Plugin() Plugin
 }

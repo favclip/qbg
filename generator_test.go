@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/favclip/genbase"
+	_ "golang.org/x/tools/go/gcimporter"
 )
 
 func TestGeneratorParsePackageDir(t *testing.T) {
