@@ -212,11 +212,11 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 	// generate new query builder factory function
 	g.Printf("// New%[1]sQueryBuilder create new %[1]sQueryBuilder.\n", st.Name())
 	g.Printf("func New%[1]sQueryBuilder() *%[1]sQueryBuilder {\n", st.Name())
-	g.Printf("return New%[1]sQueryBuilderWith(\"%[2]s\")\n", st.Name(), st.Kind())
+	g.Printf("return New%[1]sQueryBuilderWithKind(\"%[2]s\")\n", st.Name(), st.Kind())
 	g.Printf("}\n\n")
 
-	g.Printf("// New%[1]sQueryBuilderWith create new %[1]sQueryBuilder with specified kind.\n", st.Name())
-	g.Printf("func New%[1]sQueryBuilderWith(kind string) *%[1]sQueryBuilder {\n", st.Name())
+	g.Printf("// New%[1]sQueryBuilderWithKind create new %[1]sQueryBuilder with specific kind.\n", st.Name())
+	g.Printf("func New%[1]sQueryBuilderWithKind(kind string) *%[1]sQueryBuilder {\n", st.Name())
 	g.Printf("q := datastore.NewQuery(kind)\n")
 	g.Printf("bldr := &%[1]sQueryBuilder{q:q}\n", st.Name())
 	for _, field := range st.Fields {

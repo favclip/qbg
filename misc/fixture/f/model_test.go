@@ -53,7 +53,7 @@ func TestGoonKind(t *testing.T) {
 		t.Errorf("unexpected: %v", cnt1)
 	}
 
-	cnt2, err := NewSampleQueryBuilderWith(entity2.Kind).Query().Count(c)
+	cnt2, err := NewSampleQueryBuilderWithKind(entity2.Kind).Query().Count(c)
 	if err != nil {
 		t.Fatal(err)
 	}
