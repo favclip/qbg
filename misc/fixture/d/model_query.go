@@ -26,7 +26,12 @@ type SampleQueryProperty struct {
 
 // NewSampleQueryBuilder create new SampleQueryBuilder.
 func NewSampleQueryBuilder() *SampleQueryBuilder {
-	q := datastore.NewQuery("Sample")
+	return NewSampleQueryBuilderWith("Sample")
+}
+
+// NewSampleQueryBuilderWith create new SampleQueryBuilder with specified kind.
+func NewSampleQueryBuilderWith(kind string) *SampleQueryBuilder {
+	q := datastore.NewQuery(kind)
 	bldr := &SampleQueryBuilder{q: q}
 	bldr.ID = &SampleQueryProperty{
 		bldr: bldr,

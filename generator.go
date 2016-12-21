@@ -37,6 +37,7 @@ type BuildField struct {
 type BuildTag struct {
 	field *BuildField
 
+	Kind              string // e.g. `goon:"kind,FooKind"`
 	Name              string
 	PropertyNameAlter string // e.g. `qbg:"StartAt"`
 	ID                bool
@@ -147,6 +148,8 @@ func (b *BuildSource) parseField(st *BuildStruct, typeInfo *genbase.TypeInfo, fi
 				if tagText == "id" {
 					tag.ID = true
 					tag.Ignore = false
+				} else if strings.HasPrefix(tagText, "kind,") {
+					tag.Kind = tagText[5:]
 				}
 			} else if key == "qbg" {
 				tag.PropertyNameAlter = structTag.Get("qbg")
@@ -209,7 +212,12 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 	// generate new query builder factory function
 	g.Printf("// New%[1]sQueryBuilder create new %[1]sQueryBuilder.\n", st.Name())
 	g.Printf("func New%[1]sQueryBuilder() *%[1]sQueryBuilder {\n", st.Name())
-	g.Printf("q := datastore.NewQuery(\"%s\")\n", st.Name())
+	g.Printf("return New%[1]sQueryBuilderWith(\"%[2]s\")\n", st.Name(), st.Kind())
+	g.Printf("}\n\n")
+
+	g.Printf("// New%[1]sQueryBuilderWith create new %[1]sQueryBuilder with specified kind.\n", st.Name())
+	g.Printf("func New%[1]sQueryBuilderWith(kind string) *%[1]sQueryBuilder {\n", st.Name())
+	g.Printf("q := datastore.NewQuery(kind)\n")
 	g.Printf("bldr := &%[1]sQueryBuilder{q:q}\n", st.Name())
 	for _, field := range st.Fields {
 		if field.Tag.Ignore {
@@ -380,4 +388,14 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 // Name returns struct type name.
 func (st *BuildStruct) Name() string {
 	return st.typeInfo.Name()
+}
+
+// Kind returns kind from struct.
+func (st *BuildStruct) Kind() string {
+	for _, field := range st.Fields {
+		if field.Tag.Kind != "" {
+			return field.Tag.Kind
+		}
+	}
+	return st.Name()
 }
