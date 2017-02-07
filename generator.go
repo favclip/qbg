@@ -271,7 +271,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				return bldr
 			}
 
-			// Offset setupto query.
+			// Offset setup to query.
 			func (bldr *%[1]sQueryBuilder) Offset(offset int) *%[1]sQueryBuilder {
 				bldr.q = bldr.q.Offset(offset)
 				if bldr.plugin != nil {

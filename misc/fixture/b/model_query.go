@@ -73,7 +73,7 @@ func (bldr *SampleQueryBuilder) Start(cur datastore.Cursor) *SampleQueryBuilder 
 	return bldr
 }
 
-// Offset setupto query.
+// Offset setup to query.
 func (bldr *SampleQueryBuilder) Offset(offset int) *SampleQueryBuilder {
 	bldr.q = bldr.q.Offset(offset)
 	if bldr.plugin != nil {
