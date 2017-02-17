@@ -3,6 +3,7 @@ package qbg
 import (
 	"reflect"
 	"strings"
+	"unicode"
 
 	"github.com/favclip/genbase"
 )
@@ -21,7 +22,8 @@ type BuildStruct struct {
 	parent   *BuildSource
 	typeInfo *genbase.TypeInfo
 
-	Fields []*BuildField
+	Private bool
+	Fields  []*BuildField
 }
 
 // BuildField represents field of BuildStruct.
@@ -210,13 +212,19 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 			`, st.Name())
 
 	// generate new query builder factory function
-	g.Printf("// New%[1]sQueryBuilder create new %[1]sQueryBuilder.\n", st.Name())
-	g.Printf("func New%[1]sQueryBuilder() *%[1]sQueryBuilder {\n", st.Name())
-	g.Printf("return New%[1]sQueryBuilderWithKind(\"%[2]s\")\n", st.Name(), st.Kind())
+	var newWord string
+	if st.Private {
+		newWord = "new"
+	} else {
+		newWord = "New"
+	}
+	g.Printf("// %[1]s%[2]sQueryBuilder create new %[2]sQueryBuilder.\n", newWord, st.SimpleName())
+	g.Printf("func %[1]s%[2]sQueryBuilder() *%[3]sQueryBuilder {\n", newWord, st.SimpleName(), st.Name())
+	g.Printf("return %[1]s%[2]sQueryBuilderWithKind(\"%[3]s\")\n", newWord, st.SimpleName(), st.Kind())
 	g.Printf("}\n\n")
 
-	g.Printf("// New%[1]sQueryBuilderWithKind create new %[1]sQueryBuilder with specific kind.\n", st.Name())
-	g.Printf("func New%[1]sQueryBuilderWithKind(kind string) *%[1]sQueryBuilder {\n", st.Name())
+	g.Printf("// %[1]s%[2]sQueryBuilderWithKind create new %[2]sQueryBuilder with specific kind.\n", newWord, st.SimpleName())
+	g.Printf("func %[1]s%[2]sQueryBuilderWithKind(kind string) *%[3]sQueryBuilder {\n", newWord, st.SimpleName(), st.Name())
 	g.Printf("q := datastore.NewQuery(kind)\n")
 	g.Printf("bldr := &%[1]sQueryBuilder{q:q}\n", st.Name())
 	for _, field := range st.Fields {
@@ -238,7 +246,7 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 				bldr.plugin = plugger.Plugin()
 				bldr.plugin.Init("%[1]s")
 			}
-			`, st.Name())
+			`, st.SimpleName())
 	g.Printf("return bldr\n")
 	g.Printf("}\n\n")
 
@@ -387,6 +395,42 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 
 // Name returns struct type name.
 func (st *BuildStruct) Name() string {
+	// FooBar -> fooBar
+	// IIS -> iis
+	// AEData -> aeData
+
+	name := st.SimpleName()
+
+	if !st.Private {
+		return name
+	}
+	if len(name) <= 1 {
+		return strings.ToLower(name)
+	}
+	if name == strings.ToUpper(name) {
+		return strings.ToLower(name)
+	}
+
+	runeNames := []rune(name)
+	if unicode.IsLower(runeNames[0]) {
+		return name
+	} else if unicode.IsLower(runeNames[1]) {
+		return string(unicode.ToLower(runeNames[0])) + string(runeNames[1:])
+	}
+
+	var idx int
+	for idx = 0; idx < len(runeNames); idx++ {
+		r := runeNames[idx]
+		if unicode.IsLower(r) {
+			break
+		}
+	}
+
+	return strings.ToLower(string(runeNames[0:idx-1])) + string(runeNames[idx-1:])
+}
+
+// Name returns struct type name.
+func (st *BuildStruct) SimpleName() string {
 	return st.typeInfo.Name()
 }
 
