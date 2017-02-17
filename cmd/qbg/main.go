@@ -16,14 +16,15 @@ import (
 var (
 	typeNames = flag.String("type", "", "comma-separated list of type names; must be set")
 	output    = flag.String("output", "", "output file name; default srcdir/<type>_query.go")
+	private   = flag.Bool("private", false, "generated type name; export or unexport")
 )
 
 // Usage is a replacement usage function for the flags package.
 func Usage() {
 	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-	fmt.Fprintf(os.Stderr, "\tqbg [flags] [directory]\n")
-	fmt.Fprintf(os.Stderr, "\tqbg [flags] files... # Must be a single package\n")
-	fmt.Fprintf(os.Stderr, "Flags:\n")
+	fmt.Fprint(os.Stderr, "\tqbg [flags] [directory]\n")
+	fmt.Fprint(os.Stderr, "\tqbg [flags] files... # Must be a single package\n")
+	fmt.Fprint(os.Stderr, "Flags:\n")
 	flag.PrintDefaults()
 	os.Exit(2)
 }
@@ -74,12 +75,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	for _, st := range bu.Structs {
+		st.Private = *private
+	}
 
 	// Format the output.
 	src, err := bu.Emit(nil)
 	if err != nil {
 		log.Printf("warning: internal error: invalid Go generated: %s", err)
-		log.Printf("warning: compile the package to analyze the error")
+		log.Print("warning: compile the package to analyze the error")
 	}
 
 	// Write to file.
