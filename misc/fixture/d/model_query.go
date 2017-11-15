@@ -53,7 +53,6 @@ func NewSampleQueryBuilderWithKind(kind string) *SampleQueryBuilder {
 		bldr: bldr,
 		name: "CreatedAt",
 	}
-
 	if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {
 		bldr.plugin = plugger.Plugin()
 		bldr.plugin.Init("Sample")

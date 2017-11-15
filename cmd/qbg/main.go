@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	typeNames = flag.String("type", "", "comma-separated list of type names; must be set")
-	output    = flag.String("output", "", "output file name; default srcdir/<type>_query.go")
-	private   = flag.Bool("private", false, "generated type name; export or unexport")
+	typeNames        = flag.String("type", "", "comma-separated list of type names; must be set")
+	output           = flag.String("output", "", "output file name; default srcdir/<type>_query.go")
+	private          = flag.Bool("private", false, "generated type name; export or unexport")
+	inlineInterfaces = flag.Bool("inlineinterfaces", false, "generate interfaces to inline; don't use qbgutils")
 )
 
 // Usage is a replacement usage function for the flags package.
@@ -71,7 +72,9 @@ func main() {
 		flag.Usage()
 	}
 
-	bu, err := qbg.Parse(pInfo, typeInfos)
+	bu := qbg.BuildSource{}
+	bu.InlineInterfaces = *inlineInterfaces
+	err = bu.Parse(pInfo, typeInfos)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -33,7 +33,6 @@ func newFooBarQueryBuilderWithKind(kind string) *fooBarQueryBuilder {
 		bldr: bldr,
 		name: "Foo",
 	}
-
 	if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {
 		bldr.plugin = plugger.Plugin()
 		bldr.plugin.Init("FooBar")
@@ -68,7 +67,7 @@ func (bldr *fooBarQueryBuilder) Start(cur datastore.Cursor) *fooBarQueryBuilder 
 	return bldr
 }
 
-// Offset setupto query.
+// Offset setup to query.
 func (bldr *fooBarQueryBuilder) Offset(offset int) *fooBarQueryBuilder {
 	bldr.q = bldr.q.Offset(offset)
 	if bldr.plugin != nil {
@@ -202,7 +201,6 @@ func newAEDataQueryBuilderWithKind(kind string) *aeDataQueryBuilder {
 		bldr: bldr,
 		name: "Foo",
 	}
-
 	if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {
 		bldr.plugin = plugger.Plugin()
 		bldr.plugin.Init("AEData")
@@ -237,7 +235,7 @@ func (bldr *aeDataQueryBuilder) Start(cur datastore.Cursor) *aeDataQueryBuilder 
 	return bldr
 }
 
-// Offset setupto query.
+// Offset setup to query.
 func (bldr *aeDataQueryBuilder) Offset(offset int) *aeDataQueryBuilder {
 	bldr.q = bldr.q.Offset(offset)
 	if bldr.plugin != nil {
@@ -371,7 +369,6 @@ func newIISQueryBuilderWithKind(kind string) *iisQueryBuilder {
 		bldr: bldr,
 		name: "Foo",
 	}
-
 	if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {
 		bldr.plugin = plugger.Plugin()
 		bldr.plugin.Init("IIS")
@@ -406,7 +403,7 @@ func (bldr *iisQueryBuilder) Start(cur datastore.Cursor) *iisQueryBuilder {
 	return bldr
 }
 
-// Offset setupto query.
+// Offset setup to query.
 func (bldr *iisQueryBuilder) Offset(offset int) *iisQueryBuilder {
 	bldr.q = bldr.q.Offset(offset)
 	if bldr.plugin != nil {
