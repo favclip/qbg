@@ -1,0 +1,14 @@
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/favclip/genbase"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mjibson/goon"
+
+[[constraint]]
+  branch = "master"
+  name = "google.golang.org/appengine"

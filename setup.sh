@@ -1,4 +1,6 @@
-#!/usr/bin/env bash -eux
+#!/bin/sh -eux
+
+dep ensure
 
 go fmt ./...
 go run cmd/qbg/main.go -type Sample -output misc/fixture/a/model_query.go misc/fixture/a
