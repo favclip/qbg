@@ -16,8 +16,9 @@ type BuildSource struct {
 	pkg       *genbase.PackageInfo
 	typeInfos genbase.TypeInfos
 
-	InlineInterfaces bool
-	Structs          []*BuildStruct
+	InlineInterfaces    bool
+	UseDatastoreWrapper bool
+	Structs             []*BuildStruct
 }
 
 // BuildStruct represents struct of assembling..
@@ -80,7 +81,11 @@ func (b *BuildSource) Parse(pkg *genbase.PackageInfo, typeInfos genbase.TypeInfo
 	b.pkg = pkg
 	b.typeInfos = typeInfos
 
-	b.g.AddImport("google.golang.org/appengine/datastore", "")
+	if b.UseDatastoreWrapper {
+		b.g.AddImport("go.mercari.io/datastore", "")
+	} else {
+		b.g.AddImport("google.golang.org/appengine/datastore", "")
+	}
 	if !b.InlineInterfaces {
 		b.g.AddImport("github.com/favclip/qbg/qbgutils", "")
 	}
@@ -172,8 +177,11 @@ func (b *BuildSource) parseField(st *BuildStruct, typeInfo *genbase.TypeInfo, fi
 						}
 					}
 				}
-			} else if key == "goon" {
+			} else if key == "goon" || key == "boom" {
 				tagText := structTag.Get("goon")
+				if tagText == "" {
+					tagText = structTag.Get("boom")
+				}
 				if tagText == "id" {
 					tag.ID = true
 					tag.Ignore = false
@@ -207,9 +215,17 @@ func (b *BuildSource) Emit(args *[]string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		var dsKeyType string
+		if b.UseDatastoreWrapper {
+			dsKeyType = "datastore.Key"
+		} else {
+			dsKeyType = "*datastore.Key"
+		}
+
 		buf := bytes.NewBufferString("")
 		err = tmpl.Execute(buf, map[string]string{
-			"DSKeyType": "*datastore.Key",
+			"DSKeyType": dsKeyType,
 		})
 		if err != nil {
 			return nil, err
@@ -234,7 +250,6 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 	if err != nil {
 		return err
 	}
-	buf := bytes.NewBufferString("")
 
 	var newWord string
 	if st.Private {
@@ -261,15 +276,31 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 		}
 		fields = append(fields, f)
 	}
+	var dsKeyType string
+	var dsQueryType string
+	var dsNewQuery string
+	if st.parent.UseDatastoreWrapper {
+		dsKeyType = "datastore.Key"
+		dsQueryType = "datastore.Query"
+		dsNewQuery = "client.NewQuery"
+	} else {
+		dsKeyType = "*datastore.Key"
+		dsQueryType = "*datastore.Query"
+		dsNewQuery = "datastore.NewQuery"
+	}
+	buf := bytes.NewBufferString("")
 	err = tmpl.Execute(buf, map[string]interface{}{
-		"Name":        st.Name(),
-		"SimpleName":  st.SimpleName(),
-		"Kind":        st.Kind(),
-		"NewWord":     newWord,
-		"DSQueryType": "*datastore.Query",
-		"PluginType":  pluginType,
-		"PluggerType": pluggerType,
-		"Fields":      fields,
+		"UserDatastoreWrapper": st.parent.UseDatastoreWrapper,
+		"Name":                 st.Name(),
+		"SimpleName":           st.SimpleName(),
+		"Kind":                 st.Kind(),
+		"NewWord":              newWord,
+		"DSKeyType":            dsKeyType,
+		"DSQueryType":          dsQueryType,
+		"DSNewQuery":           dsNewQuery,
+		"PluginType":           pluginType,
+		"PluggerType":          pluggerType,
+		"Fields":               fields,
 	})
 	if err != nil {
 		return err

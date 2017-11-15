@@ -20,20 +20,32 @@
   revision = "0cd9745d6b9c43c1de754769708fb2ac349d84b2"
 
 [[projects]]
+  name = "go.mercari.io/datastore"
+  packages = [".","internal","internal/c/atomiccache","internal/c/fields"]
+  revision = "cbf4bb5a3f27046b85dc4c9af73aed9755e93376"
+  version = "v0.3.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context"]
+  packages = ["context","context/ctxhttp"]
   revision = "a337091b0525af65de94df2eb7e98bd9962dcbe2"
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/oauth2"
+  packages = [".","internal"]
+  revision = "9ff8ebcc8e241d46f52ecc5bff0e5a2f2dbef402"
+
+[[projects]]
+  branch = "master"
   name = "google.golang.org/appengine"
-  packages = [".","aetest","datastore","internal","internal/app_identity","internal/base","internal/datastore","internal/log","internal/memcache","internal/modules","internal/remote_api","internal/user","log","memcache","user"]
+  packages = [".","aetest","datastore","internal","internal/app_identity","internal/base","internal/datastore","internal/log","internal/memcache","internal/modules","internal/remote_api","internal/urlfetch","internal/user","log","memcache","urlfetch","user"]
   revision = "9d8544a6b2c7df9cff240fcf92d7b2f59bc13416"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f8b34126d22c1a688c229cfb5ae633a826cfc9db6c942e18d96bfd8547c679c2"
+  inputs-digest = "eee8d16d04e8f2bf647ad356e2b6f88611a0cdc3e87bab1a32c7117dcc870f9c"
   solver-name = "gps-cdcl"
   solver-version = 1

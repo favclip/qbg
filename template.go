@@ -38,13 +38,13 @@ type {{.Name}}QueryProperty struct {
 }
 
 // {{.NewWord}}{{.SimpleName}}QueryBuilder create new {{.SimpleName}}QueryBuilder.
-func {{.NewWord}}{{.SimpleName}}QueryBuilder() *{{.Name}}QueryBuilder {
-	return {{.NewWord}}{{.SimpleName}}QueryBuilderWithKind("{{.Kind}}")
+func {{.NewWord}}{{.SimpleName}}QueryBuilder({{if .UserDatastoreWrapper}}client datastore.Client,{{end}}) *{{.Name}}QueryBuilder {
+	return {{.NewWord}}{{.SimpleName}}QueryBuilderWithKind({{if .UserDatastoreWrapper}}client,{{end}}"{{.Kind}}")
 }
 
 // {{.NewWord}}{{.SimpleName}}QueryBuilderWithKind create new {{.SimpleName}}QueryBuilder with specific kind.
-func {{.NewWord}}{{.SimpleName}}QueryBuilderWithKind(kind string) *{{.Name}}QueryBuilder {
-	q := datastore.NewQuery(kind)
+func {{.NewWord}}{{.SimpleName}}QueryBuilderWithKind({{if .UserDatastoreWrapper}}client datastore.Client,{{end}}kind string) *{{.Name}}QueryBuilder {
+	q := {{.DSNewQuery}}(kind)
 	bldr := &{{.Name}}QueryBuilder{q:q}
 	{{- range $idx, $f := .Fields}}
 		bldr.{{$f.Tag.PropertyNameAlter}}= &{{$st.Name}}QueryProperty{
@@ -62,7 +62,7 @@ func {{.NewWord}}{{.SimpleName}}QueryBuilderWithKind(kind string) *{{.Name}}Quer
 }
 
 // Ancestor sets parent key to ancestor query.
-func (bldr *{{.Name}}QueryBuilder) Ancestor(parentKey *datastore.Key) *{{.Name}}QueryBuilder {
+func (bldr *{{.Name}}QueryBuilder) Ancestor(parentKey {{.DSKeyType}}) *{{.Name}}QueryBuilder {
 	bldr.q = bldr.q.Ancestor(parentKey)
 	if bldr.plugin != nil {
 		bldr.plugin.Ancestor(parentKey)
@@ -107,7 +107,7 @@ func (bldr *{{.Name}}QueryBuilder) Limit(limit int) *{{.Name}}QueryBuilder {
 }
 
 // Query returns *datastore.Query.
-func (bldr *{{.Name}}QueryBuilder) Query() *datastore.Query {
+func (bldr *{{.Name}}QueryBuilder) Query() {{.DSQueryType}} {
 	return bldr.q
 }
 

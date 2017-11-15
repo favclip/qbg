@@ -11,3 +11,4 @@ go run cmd/qbg/main.go -output misc/fixture/e/model_query.go misc/fixture/e
 go run cmd/qbg/main.go -output misc/fixture/f/model_query.go misc/fixture/f
 go run cmd/qbg/main.go -output misc/fixture/g/model_query.go -private misc/fixture/g
 go run cmd/qbg/main.go -output misc/fixture/h/model_query.go -inlineinterfaces misc/fixture/h
+go run cmd/qbg/main.go -output misc/fixture/i/model_query.go -usedatastorewrapper misc/fixture/i
