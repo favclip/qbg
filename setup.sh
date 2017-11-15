@@ -1,5 +1,7 @@
 #!/usr/bin/env bash -eux
 
+dep ensure
+
 go fmt ./...
 go run cmd/qbg/main.go -type Sample -output misc/fixture/a/model_query.go misc/fixture/a
 go run cmd/qbg/main.go -type Sample -output misc/fixture/b/model_query.go misc/fixture/b

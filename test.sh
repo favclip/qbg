@@ -1,0 +1,3 @@
+#!/usr/bin/env bash -eux
+
+goapp test -v ./...
