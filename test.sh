@@ -1,3 +1,5 @@
 #!/bin/sh -eux
 
-goapp test -v ./...
+packages=$(go list ./...)
+
+goapp test -v $packages
