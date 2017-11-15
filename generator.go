@@ -14,7 +14,8 @@ type BuildSource struct {
 	pkg       *genbase.PackageInfo
 	typeInfos genbase.TypeInfos
 
-	Structs []*BuildStruct
+	InlineInterfaces bool
+	Structs          []*BuildStruct
 }
 
 // BuildStruct represents struct of assembling..
@@ -48,6 +49,7 @@ type BuildTag struct {
 }
 
 // Parse construct *BuildSource from package & type information.
+// deprecated. use *BuildSource#Parse instead.
 func Parse(pkg *genbase.PackageInfo, typeInfos genbase.TypeInfos) (*BuildSource, error) {
 	bu := &BuildSource{
 		g:         genbase.NewGenerator(pkg),
@@ -66,6 +68,29 @@ func Parse(pkg *genbase.PackageInfo, typeInfos genbase.TypeInfos) (*BuildSource,
 	}
 
 	return bu, nil
+}
+
+// Parse construct *BuildSource from package & type information.
+func (b *BuildSource) Parse(pkg *genbase.PackageInfo, typeInfos genbase.TypeInfos) error {
+	if b.g == nil {
+		b.g = genbase.NewGenerator(pkg)
+	}
+	b.pkg = pkg
+	b.typeInfos = typeInfos
+
+	b.g.AddImport("google.golang.org/appengine/datastore", "")
+	if !b.InlineInterfaces {
+		b.g.AddImport("github.com/favclip/qbg/qbgutils", "")
+	}
+
+	for _, typeInfo := range typeInfos {
+		err := b.parseStruct(typeInfo)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (b *BuildSource) parseStruct(typeInfo *genbase.TypeInfo) error {
@@ -174,6 +199,28 @@ func (b *BuildSource) parseField(st *BuildStruct, typeInfo *genbase.TypeInfo, fi
 func (b *BuildSource) Emit(args *[]string) ([]byte, error) {
 	b.g.PrintHeader("qbg", args)
 
+	if b.InlineInterfaces {
+		b.g.Printf(`
+			// Plugin supply hook point for query constructions.
+			type Plugin interface {
+				Init(typeName string)
+				Ancestor(ancestor *datastore.Key)
+				KeysOnly()
+				Start(cur datastore.Cursor)
+				Offset(offset int)
+				Limit(limit int)
+				Filter(name, op string, value interface{})
+				Asc(name string)
+				Desc(name string)
+			}
+
+			// Plugger supply Plugin component.
+			type Plugger interface {
+				Plugin() Plugin
+			}
+		`)
+	}
+
 	for _, st := range b.Structs {
 		err := st.emit(b.g)
 		if err != nil {
@@ -190,7 +237,11 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 	// generate FooQueryBuilder struct from Foo struct
 	g.Printf("type %sQueryBuilder struct {\n", st.Name())
 	g.Printf("q *datastore.Query\n")
-	g.Printf("plugin qbgutils.Plugin\n")
+	if st.parent.InlineInterfaces {
+		g.Printf("plugin Plugin\n")
+	} else {
+		g.Printf("plugin qbgutils.Plugin\n")
+	}
 
 	for _, field := range st.Fields {
 		if field.Tag.Ignore {
@@ -241,8 +292,13 @@ func (st *BuildStruct) emit(g *genbase.Generator) error {
 					}
 			`, st.Name(), field.Tag.PropertyNameAlter, name)
 	}
+	if st.parent.InlineInterfaces {
+		g.Printf("if plugger, ok := interface{}(bldr).(Plugger); ok {")
+	} else {
+		g.Printf("if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {")
+	}
+
 	g.Printf(`
-			if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {
 				bldr.plugin = plugger.Plugin()
 				bldr.plugin.Init("%[1]s")
 			}
