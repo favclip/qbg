@@ -33,10 +33,12 @@ func newFooBarQueryBuilderWithKind(kind string) *fooBarQueryBuilder {
 		bldr: bldr,
 		name: "Foo",
 	}
+
 	if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {
 		bldr.plugin = plugger.Plugin()
 		bldr.plugin.Init("FooBar")
 	}
+
 	return bldr
 }
 
@@ -201,10 +203,12 @@ func newAEDataQueryBuilderWithKind(kind string) *aeDataQueryBuilder {
 		bldr: bldr,
 		name: "Foo",
 	}
+
 	if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {
 		bldr.plugin = plugger.Plugin()
 		bldr.plugin.Init("AEData")
 	}
+
 	return bldr
 }
 
@@ -369,10 +373,12 @@ func newIISQueryBuilderWithKind(kind string) *iisQueryBuilder {
 		bldr: bldr,
 		name: "Foo",
 	}
+
 	if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {
 		bldr.plugin = plugger.Plugin()
 		bldr.plugin.Init("IIS")
 	}
+
 	return bldr
 }
 

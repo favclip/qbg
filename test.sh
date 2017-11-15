@@ -2,4 +2,4 @@
 
 packages=$(go list ./...)
 
-goapp test -v $packages
+goapp test $packages

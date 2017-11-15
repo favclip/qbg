@@ -1,8 +1,10 @@
 package qbg
 
 import (
+	"bytes"
 	"reflect"
 	"strings"
+	"text/template"
 	"unicode"
 
 	"github.com/favclip/genbase"
@@ -200,25 +202,20 @@ func (b *BuildSource) Emit(args *[]string) ([]byte, error) {
 	b.g.PrintHeader("qbg", args)
 
 	if b.InlineInterfaces {
-		b.g.Printf(`
-			// Plugin supply hook point for query constructions.
-			type Plugin interface {
-				Init(typeName string)
-				Ancestor(ancestor *datastore.Key)
-				KeysOnly()
-				Start(cur datastore.Cursor)
-				Offset(offset int)
-				Limit(limit int)
-				Filter(name, op string, value interface{})
-				Asc(name string)
-				Desc(name string)
-			}
+		tmpl := template.New("plugin")
+		tmpl, err := tmpl.Parse(pluginTemplate)
+		if err != nil {
+			return nil, err
+		}
+		buf := bytes.NewBufferString("")
+		err = tmpl.Execute(buf, map[string]string{
+			"DSKeyType": "*datastore.Key",
+		})
+		if err != nil {
+			return nil, err
+		}
 
-			// Plugger supply Plugin component.
-			type Plugger interface {
-				Plugin() Plugin
-			}
-		`)
+		b.g.Printf(buf.String())
 	}
 
 	for _, st := range b.Structs {
@@ -232,219 +229,53 @@ func (b *BuildSource) Emit(args *[]string) ([]byte, error) {
 }
 
 func (st *BuildStruct) emit(g *genbase.Generator) error {
-	g.Printf("// %[1]sQueryBuilder build query for %[1]s.\n", st.Name())
-
-	// generate FooQueryBuilder struct from Foo struct
-	g.Printf("type %sQueryBuilder struct {\n", st.Name())
-	g.Printf("q *datastore.Query\n")
-	if st.parent.InlineInterfaces {
-		g.Printf("plugin Plugin\n")
-	} else {
-		g.Printf("plugin qbgutils.Plugin\n")
+	tmpl := template.New("struct")
+	tmpl, err := tmpl.Parse(structTemplate)
+	if err != nil {
+		return err
 	}
+	buf := bytes.NewBufferString("")
 
-	for _, field := range st.Fields {
-		if field.Tag.Ignore {
-			continue
-		}
-
-		g.Printf("%[1]s *%[2]sQueryProperty\n", field.Tag.PropertyNameAlter, st.Name())
-	}
-	g.Printf("}\n\n")
-
-	// generate property info
-	g.Printf(`
-			// %[1]sQueryProperty has property information for %[1]sQueryBuilder.
-			type %[1]sQueryProperty struct {
-				bldr *%[1]sQueryBuilder
-				name string
-			}
-
-			`, st.Name())
-
-	// generate new query builder factory function
 	var newWord string
 	if st.Private {
 		newWord = "new"
 	} else {
 		newWord = "New"
 	}
-	g.Printf("// %[1]s%[2]sQueryBuilder create new %[2]sQueryBuilder.\n", newWord, st.SimpleName())
-	g.Printf("func %[1]s%[2]sQueryBuilder() *%[3]sQueryBuilder {\n", newWord, st.SimpleName(), st.Name())
-	g.Printf("return %[1]s%[2]sQueryBuilderWithKind(\"%[3]s\")\n", newWord, st.SimpleName(), st.Kind())
-	g.Printf("}\n\n")
-
-	g.Printf("// %[1]s%[2]sQueryBuilderWithKind create new %[2]sQueryBuilder with specific kind.\n", newWord, st.SimpleName())
-	g.Printf("func %[1]s%[2]sQueryBuilderWithKind(kind string) *%[3]sQueryBuilder {\n", newWord, st.SimpleName(), st.Name())
-	g.Printf("q := datastore.NewQuery(kind)\n")
-	g.Printf("bldr := &%[1]sQueryBuilder{q:q}\n", st.Name())
-	for _, field := range st.Fields {
-		if field.Tag.Ignore {
+	var pluginType string
+	if st.parent.InlineInterfaces {
+		pluginType = "Plugin"
+	} else {
+		pluginType = "qbgutils.Plugin"
+	}
+	var pluggerType string
+	if st.parent.InlineInterfaces {
+		pluggerType = "Plugger"
+	} else {
+		pluggerType = "qbgutils.Plugger"
+	}
+	var fields []*BuildField
+	for _, f := range st.Fields {
+		if f.Tag.Ignore {
 			continue
 		}
-		name := field.Tag.Name
-		if field.Tag.ID {
-			name = "__key__"
-		}
-		g.Printf(`bldr.%[2]s= &%[1]sQueryProperty{
-						bldr : bldr,
-						name: "%[3]s",
-					}
-			`, st.Name(), field.Tag.PropertyNameAlter, name)
+		fields = append(fields, f)
 	}
-	if st.parent.InlineInterfaces {
-		g.Printf("if plugger, ok := interface{}(bldr).(Plugger); ok {")
-	} else {
-		g.Printf("if plugger, ok := interface{}(bldr).(qbgutils.Plugger); ok {")
+	err = tmpl.Execute(buf, map[string]interface{}{
+		"Name":        st.Name(),
+		"SimpleName":  st.SimpleName(),
+		"Kind":        st.Kind(),
+		"NewWord":     newWord,
+		"DSQueryType": "*datastore.Query",
+		"PluginType":  pluginType,
+		"PluggerType": pluggerType,
+		"Fields":      fields,
+	})
+	if err != nil {
+		return err
 	}
 
-	g.Printf(`
-				bldr.plugin = plugger.Plugin()
-				bldr.plugin.Init("%[1]s")
-			}
-			`, st.SimpleName())
-	g.Printf("return bldr\n")
-	g.Printf("}\n\n")
-
-	// generate methods
-	g.Printf(`
-			// Ancestor sets parent key to ancestor query.
-			func (bldr *%[1]sQueryBuilder) Ancestor(parentKey *datastore.Key) *%[1]sQueryBuilder {
-				bldr.q = bldr.q.Ancestor(parentKey)
-				if bldr.plugin != nil {
-					bldr.plugin.Ancestor(parentKey)
-				}
-				return bldr
-			}
-
-			// KeysOnly sets keys only option to query.
-			func (bldr *%[1]sQueryBuilder) KeysOnly() *%[1]sQueryBuilder {
-				bldr.q = bldr.q.KeysOnly()
-				if bldr.plugin != nil {
-					bldr.plugin.KeysOnly()
-				}
-				return bldr
-			}
-
-			// Start setup to query.
-			func (bldr *%[1]sQueryBuilder) Start(cur datastore.Cursor) *%[1]sQueryBuilder {
-				bldr.q = bldr.q.Start(cur)
-				if bldr.plugin != nil {
-					bldr.plugin.Start(cur)
-				}
-				return bldr
-			}
-
-			// Offset setup to query.
-			func (bldr *%[1]sQueryBuilder) Offset(offset int) *%[1]sQueryBuilder {
-				bldr.q = bldr.q.Offset(offset)
-				if bldr.plugin != nil {
-					bldr.plugin.Offset(offset)
-				}
-				return bldr
-			}
-
-			// Limit setup to query.
-			func (bldr *%[1]sQueryBuilder) Limit(limit int) *%[1]sQueryBuilder {
-				bldr.q = bldr.q.Limit(limit)
-				if bldr.plugin != nil {
-					bldr.plugin.Limit(limit)
-				}
-				return bldr
-			}
-
-			// Query returns *datastore.Query.
-			func (bldr *%[1]sQueryBuilder) Query() *datastore.Query {
-				return bldr.q
-			}
-
-			// Filter with op & value.
-			func (p *%[1]sQueryProperty) Filter(op string, value interface{}) *%[1]sQueryBuilder {
-				switch op {
-					case "<=":
-						p.LessThanOrEqual(value)
-					case ">=":
-						p.GreaterThanOrEqual(value)
-					case "<":
-						p.LessThan(value)
-					case ">":
-						p.GreaterThan(value)
-					case "=":
-						p.Equal(value)
-					default:
-						p.bldr.q = p.bldr.q.Filter(p.name + " " + op, value) // error raised by native query
-				}
-				if p.bldr.plugin != nil {
-					p.bldr.plugin.Filter(p.name, op, value)
-				}
-				return p.bldr
-			}
-
-			// LessThanOrEqual filter with value.
-			func (p *%[1]sQueryProperty) LessThanOrEqual(value interface{}) *%[1]sQueryBuilder {
-				p.bldr.q = p.bldr.q.Filter(p.name + " <=", value)
-				if p.bldr.plugin != nil {
-					p.bldr.plugin.Filter(p.name,"<=", value)
-				}
-				return p.bldr
-			}
-
-			// GreaterThanOrEqual filter with value.
-			func (p *%[1]sQueryProperty) GreaterThanOrEqual(value interface{}) *%[1]sQueryBuilder {
-				p.bldr.q = p.bldr.q.Filter(p.name +  " >=", value)
-				if p.bldr.plugin != nil {
-					p.bldr.plugin.Filter(p.name,">=", value)
-				}
-				return p.bldr
-			}
-
-			// LessThan filter with value.
-			func (p *%[1]sQueryProperty) LessThan(value interface{}) *%[1]sQueryBuilder {
-				p.bldr.q = p.bldr.q.Filter(p.name + " <", value)
-				if p.bldr.plugin != nil {
-					p.bldr.plugin.Filter(p.name,"<", value)
-				}
-				return p.bldr
-			}
-
-			// GreaterThan filter with value.
-			func (p *%[1]sQueryProperty) GreaterThan(value interface{}) *%[1]sQueryBuilder {
-				p.bldr.q = p.bldr.q.Filter(p.name + " >", value)
-				if p.bldr.plugin != nil {
-					p.bldr.plugin.Filter(p.name,">", value)
-				}
-				return p.bldr
-			}
-
-			// Equal filter with value.
-			func (p *%[1]sQueryProperty) Equal(value interface{}) *%[1]sQueryBuilder {
-				p.bldr.q = p.bldr.q.Filter(p.name + " =", value)
-				if p.bldr.plugin != nil {
-					p.bldr.plugin.Filter(p.name,"=", value)
-				}
-				return p.bldr
-			}
-
-			// Asc order.
-			func (p *%[1]sQueryProperty) Asc() *%[1]sQueryBuilder {
-				p.bldr.q = p.bldr.q.Order(p.name)
-				if p.bldr.plugin != nil {
-					p.bldr.plugin.Asc(p.name)
-				}
-				return p.bldr
-			}
-
-			// Desc order.
-			func (p *%[1]sQueryProperty) Desc() *%[1]sQueryBuilder {
-				p.bldr.q = p.bldr.q.Order("-" + p.name)
-				if p.bldr.plugin != nil {
-					p.bldr.plugin.Desc(p.name)
-				}
-				return p.bldr
-			}
-		`, st.Name(), "%s")
-
-	g.Printf("\n\n")
+	g.Printf(buf.String())
 
 	return nil
 }

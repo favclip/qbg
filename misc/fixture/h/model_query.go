@@ -55,10 +55,12 @@ func NewSampleQueryBuilderWithKind(kind string) *SampleQueryBuilder {
 		bldr: bldr,
 		name: "Foo",
 	}
+
 	if plugger, ok := interface{}(bldr).(Plugger); ok {
 		bldr.plugin = plugger.Plugin()
 		bldr.plugin.Init("Sample")
 	}
+
 	return bldr
 }
 
