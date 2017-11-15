@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	typeNames        = flag.String("type", "", "comma-separated list of type names; must be set")
-	output           = flag.String("output", "", "output file name; default srcdir/<type>_query.go")
-	private          = flag.Bool("private", false, "generated type name; export or unexport")
-	inlineInterfaces = flag.Bool("inlineinterfaces", false, "generate interfaces to inline; don't use qbgutils")
+	typeNames           = flag.String("type", "", "comma-separated list of type names; must be set")
+	output              = flag.String("output", "", "output file name; default srcdir/<type>_query.go")
+	private             = flag.Bool("private", false, "generated type name; export or unexport")
+	inlineInterfaces    = flag.Bool("inlineinterfaces", false, "generate interfaces to inline; don't use qbgutils")
+	useDatastoreWrapper = flag.Bool("usedatastorewrapper", false, "use go.mercari.io/datastore")
 )
 
 // Usage is a replacement usage function for the flags package.
@@ -74,6 +75,11 @@ func main() {
 
 	bu := qbg.BuildSource{}
 	bu.InlineInterfaces = *inlineInterfaces
+	bu.UseDatastoreWrapper = *useDatastoreWrapper
+	if bu.UseDatastoreWrapper {
+		// go.mercari.io/datastore can't use qbgutils
+		bu.InlineInterfaces = true
+	}
 	err = bu.Parse(pInfo, typeInfos)
 	if err != nil {
 		log.Fatal(err)

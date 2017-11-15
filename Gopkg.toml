@@ -12,3 +12,7 @@
 [[constraint]]
   branch = "master"
   name = "google.golang.org/appengine"
+
+[[constraint]]
+  branch = "master"
+  name = "go.mercari.io/datastore"
