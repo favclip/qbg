@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -eux
+#!/bin/sh -eux
 
 dep ensure
 
