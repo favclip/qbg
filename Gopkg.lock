@@ -2,50 +2,101 @@
 
 
 [[projects]]
-  branch = "master"
+  digest = "1:13b41b076f2eccfb9c237f683d226ecf66ddcf663e6172c83d8f61317e672bfc"
   name = "github.com/favclip/genbase"
   packages = ["."]
-  revision = "9308343633095f1e30c2e879e8a7af64f15273d0"
+  pruneopts = ""
+  revision = "33e3f4f43761221e7ef1f0be35bad3711ae26cbd"
+  version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
+  digest = "1:b1d3041d568e065ab4d76f7477844458e9209c0bb241eaccdc0770bf0a13b120"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
+  pruneopts = ""
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:51cf0d7dfb0def086ee1d36d3bc3ee5cad0a4130be9c144d85f7d1cfd7340ec3"
   name = "github.com/mjibson/goon"
   packages = ["."]
-  revision = "0cd9745d6b9c43c1de754769708fb2ac349d84b2"
+  pruneopts = ""
+  revision = "0c01b4bc4f4970fa6f91409bf7f134a10809219c"
 
 [[projects]]
+  digest = "1:a7e5bd2cebd7a93bb113d3fc414e40203a3f352bde7f5408cc954e0cb53b8b39"
   name = "go.mercari.io/datastore"
-  packages = [".","internal","internal/c/atomiccache","internal/c/fields"]
-  revision = "cbf4bb5a3f27046b85dc4c9af73aed9755e93376"
-  version = "v0.3.0"
+  packages = [
+    ".",
+    "internal",
+    "internal/c/atomiccache",
+    "internal/c/fields",
+  ]
+  pruneopts = ""
+  revision = "8f081843d4aadbd447366f05507f14d8e48c5e5f"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:58d8f8f3ad415b10d2145316519e5b7995b7cf9e663b33a1e9e0c2ddd96c1d58"
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp"]
-  revision = "a337091b0525af65de94df2eb7e98bd9962dcbe2"
+  packages = [
+    "context",
+    "context/ctxhttp",
+  ]
+  pruneopts = ""
+  revision = "a680a1efc54dd51c040b3b5ce4939ea3cf2ea0d1"
 
 [[projects]]
   branch = "master"
+  digest = "1:b9e1a35de8b10387d6d0c97c41f393d2025fb51b6f00b8cb9a1a9fca62956884"
   name = "golang.org/x/oauth2"
-  packages = [".","internal"]
-  revision = "9ff8ebcc8e241d46f52ecc5bff0e5a2f2dbef402"
+  packages = [
+    ".",
+    "internal",
+  ]
+  pruneopts = ""
+  revision = "ef147856a6ddbb60760db74283d2424e98c87bff"
 
 [[projects]]
-  branch = "master"
+  digest = "1:eede11c81b63c8f6fd06ef24ba0a640dc077196ec9b7a58ecde03c82eee2f151"
   name = "google.golang.org/appengine"
-  packages = [".","aetest","datastore","internal","internal/app_identity","internal/base","internal/datastore","internal/log","internal/memcache","internal/modules","internal/remote_api","internal/urlfetch","internal/user","log","memcache","urlfetch","user"]
-  revision = "9d8544a6b2c7df9cff240fcf92d7b2f59bc13416"
+  packages = [
+    ".",
+    "aetest",
+    "datastore",
+    "internal",
+    "internal/app_identity",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/memcache",
+    "internal/modules",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "internal/user",
+    "log",
+    "memcache",
+    "urlfetch",
+    "user",
+  ]
+  pruneopts = ""
+  revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
+  version = "v1.1.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "eee8d16d04e8f2bf647ad356e2b6f88611a0cdc3e87bab1a32c7117dcc870f9c"
+  input-imports = [
+    "github.com/favclip/genbase",
+    "github.com/mjibson/goon",
+    "go.mercari.io/datastore",
+    "google.golang.org/appengine",
+    "google.golang.org/appengine/aetest",
+    "google.golang.org/appengine/datastore",
+    "google.golang.org/appengine/memcache",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
